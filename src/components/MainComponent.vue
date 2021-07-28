@@ -1,7 +1,7 @@
 <template>
-    <p>Type Something...</p>
-    <p>Press Enter</p>
-    <input v-on:keyup.enter="addValue()" type="text" v-model="task">
+    <input type="text" v-model="task" placeholder="Task...">
+    <input type="date" v-model="dueDate" class="dueDate">
+    <button class="addButton" v-on:click="addValue()">Add</button>
     <br/><br/>
     <p style="color:orange">{{msgForUser}}</p>
     <label for="filter">Filter List : </label>
@@ -15,6 +15,7 @@
         <tr style="color:white; background-color:black">
             <th>Status</th>
             <th>Task Name</th>
+            <th>Due In</th>
             <th>Edit</th>
             <th>Delete</th>
         </tr>
@@ -22,6 +23,7 @@
         <tr v-for="(t,index) in filteredList" v-bind:key="index">
             <td><input type="checkbox" v-model="t.status" v-on:click="taskStatusModifier(index)"></td>
             <td><b>{{t.taskName}}</b></td>
+            <td><b>{{t.dueDat}} {{t.dueType}}</b></td>
             <td><button class="editButton" v-on:click="editTask(index)">Edit</button></td>
             <td><button class="deleteButton" v-on:click="deleteTask(index)">Delete</button></td>
         </tr>
@@ -33,13 +35,19 @@ export default{
     data(){
         return{
             task:'',
-            msgForUser:'',
+            dueDate:'',
+            diffBDate:0,
+            dueTimeType:'',//in hours, minutes or days
+            msgForUser:'', //error message if user type to add with empty input field
             editTaskIndex:null,
             isEdit:false,
             filter:'all',
             allList:true,
-            toDoList:[{taskName:'first task',status:true},{taskName:'second task',status:false},
-                     {taskName:'third task',status:true},{taskName:'fourth task',status:false}],
+            /*toDoList data is like {taskName:'first task',dueDate:'2021-08-21', status:true},
+                                    {taskName:'second task',dueDate:'2021-08-25',status:false},
+                                    {taskName:'third task',dueDate:'2021-08-12' ,status:true},
+                                    {taskName:'fourth task',dueDate:'2021-08-01' ,status:false}*/
+            toDoList:[],
             filteredList:[]
         }
     },
@@ -54,8 +62,10 @@ export default{
                     this.editTaskIndex = null;
                 }
                 else{
-                    this.toDoList.push({taskName:this.task,status:false});
+                    this.dueDateDiff();
+                    this.toDoList.push({taskName:this.task, dueDat: this.diffBDate, dueType:this.dueTimeType ,status:false});
                     this.task = '';
+                    this.dueDate = '';
                 }
                 this.updateList();
             }
@@ -104,6 +114,33 @@ export default{
                     }
                 }
             }
+        },
+        dueDateDiff(){
+            const current = new Date();
+            var cdate = `${current.getFullYear()}-${current.getMonth()+1}-${current.getDate()}`;
+            cdate = new Date(cdate);
+            var ddate = this.dueDate;
+            ddate = new Date(ddate);
+            //console.log(cdate+' '+ddate);
+            this.diffBDate = (ddate-cdate)/ (1000 * 3600 * 24);
+            if(this.diffBDate <1){
+                var hoursRemaining = (ddate-cdate)/(1000 * 3600);
+                if(hoursRemaining < 1){
+                    //minutes remaining
+                    var minutesRemaining = (ddate-cdate)/(1000*60);
+                    this.dueTimeType = 'Minutes';
+                    this.diffBDate = Math.floor(minutesRemaining);
+                }else{
+                    //hours remaining
+                    this.dueTimeType = 'Hours';
+                    this.diffBDate = Math.floor(hoursRemaining);
+                }
+            }
+            else{
+                //Days remaining
+                this.dueTimeType = 'Days';
+                this.diffBDate = Math.floor(this.diffBDate);
+            }
         }
     },
     mounted(){
@@ -114,9 +151,23 @@ export default{
 <style scoped>
 input{
     height: 30px;
-    width:20%;
+    width:15%;
     border:1px solid #d9d9d9;
     outline:none;
+}
+input.dueDate{
+    height: 33px;
+    width:15%;
+    margin-left: 1%;
+    margin-right: 1%;
+}
+button.addButton{
+    border:none;
+    outline:none;
+    height: 34px;
+    color:white;
+    background-color: green;
+    width:70px;
 }
 table{
     width:80%;
