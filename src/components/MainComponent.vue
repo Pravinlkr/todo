@@ -16,7 +16,7 @@
     </tr>
     <!--show all items in to do list-->
     <tr v-for="(t,index) in filteredList" v-bind:key="index">
-        <td><input type="checkbox" v-model="t.status" v-on:click="taskStatusModifier(index)"></td>
+        <td><input type="checkbox" v-model="t.status" v-on:click="taskStatusModifier(t.taskName)"></td>
         <td><span v-if="!t.isEdit"><b>{{t.taskName}}</b></span>
             <span v-if="t.isEdit"><input type="text" v-model="eTask" v-on:keyup.enter="editTaskValue()" class="editInput"></span>
         </td>
@@ -75,9 +75,9 @@ export default {
     methods: {
         minDate(){
             //to disable all previous date from current date in date picker
-            const current = new Date();
-            console.log(current);
-            var fullYear = `${current.getFullYear()}`;
+            var current = new Date().toISOString();
+            current = current.substring(0,current.length-1);
+            /*var fullYear = `${current.getFullYear()}`;
             var month = `${current.getMonth()+1}`;
             var day = `${current.getDate()}`;
             if(month < 10){
@@ -87,7 +87,8 @@ export default {
                 day = '0'+day;
             }
             var tdate = fullYear+'-'+month+'-'+day;
-            this.todayDate = tdate;
+            this.todayDate = tdate;*/
+            this.todayDate = current;
         },
         editTaskValue() {
             //edit a single task in line the table
@@ -118,7 +119,6 @@ export default {
                     });
                     this.task = '';
                     this.dueDate = '';
-                    console.log(this.toDoList);
                     this.updateList();
                 }else{
                     this.msgForUser = 'Please Choose a date, empty date can not be added'
@@ -137,12 +137,33 @@ export default {
             this.editTaskIndex = index;
             this.toDoList[index].isEdit = true;
         },
-        taskStatusModifier(index) {
-            if (this.toDoList[index].status == true) {
-                this.toDoList[index].status = false;
-            } else {
-                this.toDoList[index].status = true;
+        taskStatusModifier(task) {
+            var len = this.toDoList.length;
+            let i=0;
+            //let currentFilterName = '';
+            //currentFilterName = this.filter;
+            for(i=0; i<len; i++){
+                if(this.toDoList[i].taskName == task){
+                    console.log("found at position : "+i);
+                    if (this.toDoList[i].status == true) {
+                        this.toDoList[i].status = false;
+                    } 
+                    if (this.toDoList[i].status == false){
+                        this.toDoList[i].status = true;
+                    }
+                    this.allFilter();
+                    break;
+                }
             }
+            /*if(currentFilterName == 'all'){
+                this.allFilter();
+            }
+            if(currentFilterName == 'completed'){
+                this.completedFilter();
+            }
+            if(currentFilterName == 'notcompleted'){
+                this.notCompletedFilter();
+            }*/
         },
         updateList() {
             this.filteredList = [];
