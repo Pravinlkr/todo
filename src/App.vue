@@ -2,7 +2,7 @@
   <h2>To Do App</h2>
   <main-component></main-component>
 </template>
-
+ 
 <script>
 import MainComponent from './components/MainComponent.vue'
 

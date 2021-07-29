@@ -1,6 +1,6 @@
 <template>
 <input type="text" v-model="task" placeholder="Task...">
-<input type="date" v-model="dueDate" class="dueDate">
+<input type="date" v-model="dueDate" class="dueDate" v-on:click="minDate()" v-bind:min="todayDate">
 <button class="addButton" v-on:click="addValue()">Add</button>
 <br /><br />
 <p style="color:orange">{{msgForUser}}</p>
@@ -51,6 +51,7 @@ export default {
             task: '',
             eTask: '', //EDITABLE TASK
             dueDate: '',
+            todayDate: '',
             diffBDate: 0,
             dueTimeType: '', //in hours, minutes or days
             msgForUser: '', //error message if user type to add with empty input field
@@ -70,7 +71,24 @@ export default {
         }
     },
     methods: {
+        minDate(){
+            //to disable all previous date from current date in date picker
+            const current = new Date();
+            var fullYear = `${current.getFullYear()}`;
+            var month = `${current.getMonth()+1}`;
+            var day = `${current.getDate()}`;
+            if(month < 10){
+                month = '0'+month;
+            }
+            if(day < 10){
+                day = '0'+day;
+            }
+            var tdate = fullYear+'-'+month+'-'+day;
+            this.todayDate = tdate;
+            console.log(this.todayDate);
+        },
         editTaskValue() {
+            //edit a single task in line the table
             if (this.eTask.length > 0) {
                 this.msgForUser = ''
                 this.toDoList[this.editTaskIndex].taskName = this.eTask;
@@ -84,6 +102,7 @@ export default {
             }
         },
         addValue() {
+            //add new task to the list
             if (this.task.length > 0) {
                 if(this.dueDate != ''){
                     this.msgForUser = ''
