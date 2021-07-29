@@ -1,6 +1,6 @@
 <template>
 <input type="text" v-model="task" placeholder="Task...">
-<input type="date" v-model="dueDate" class="dueDate" v-on:click="minDate()" v-bind:min="todayDate">
+<input type="datetime-local" v-model="dueDate" class="dueDate" v-on:click="minDate()" v-bind:min="todayDate">
 <button class="addButton" v-on:click="addValue()">Add</button>
 <br /><br />
 <p style="color:orange">{{msgForUser}}</p>
@@ -76,6 +76,7 @@ export default {
         minDate(){
             //to disable all previous date from current date in date picker
             const current = new Date();
+            console.log(current);
             var fullYear = `${current.getFullYear()}`;
             var month = `${current.getMonth()+1}`;
             var day = `${current.getDate()}`;
@@ -87,7 +88,6 @@ export default {
             }
             var tdate = fullYear+'-'+month+'-'+day;
             this.todayDate = tdate;
-            console.log(this.todayDate);
         },
         editTaskValue() {
             //edit a single task in line the table
@@ -173,9 +173,7 @@ export default {
             }
         },
         dueDateDiff() {
-            const current = new Date();
-            var cdate = `${current.getFullYear()}-${current.getMonth()+1}-${current.getDate()}`;
-            cdate = new Date(cdate);
+            var cdate = new Date();
             var ddate = this.dueDate;
             ddate = new Date(ddate);
             //console.log(cdate+' '+ddate);
