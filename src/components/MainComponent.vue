@@ -21,7 +21,9 @@
             <span v-if="t.isEdit"><input type="text" v-model="eTask" v-on:keyup.enter="editTaskValue()" class="editInput"></span>
         </td>
         <td><b>{{t.dueDat}} {{t.dueType}}</b></td>
-        <td><button class="editButton" v-on:click="editTask(index)">Edit</button></td>
+        <td><span v-if="!t.isEdit"><button class="editButton" v-on:click="editTask(index)">Edit</button></span>
+            <span v-if="t.isEdit"><button class="editButton" v-on:click="editTaskValue()">Update</button></span>
+        </td>
         <td><button class="deleteButton" v-on:click="deleteTask(index)">Delete</button></td>
     </tr>
 </table>
