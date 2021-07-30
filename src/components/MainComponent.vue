@@ -1,6 +1,6 @@
 <template>
 <input type="text" v-model="task" placeholder="Task...">
-<input type="date" v-model="dueDate" class="dueDate">
+<input type="datetime-local" v-model="dueDate" class="dueDate" v-on:click="minDate()" v-bind:min="todayDate">
 <button class="addButton" v-on:click="addValue()">Add</button>
 <br /><br />
 <p style="color:orange">{{msgForUser}}</p>
@@ -16,12 +16,14 @@
     </tr>
     <!--show all items in to do list-->
     <tr v-for="(t,index) in filteredList" v-bind:key="index">
-        <td><input type="checkbox" v-model="t.status" v-on:click="taskStatusModifier(index)"></td>
+        <td><input type="checkbox" v-model="t.status" v-on:click="taskStatusModifier(t.taskName)"></td>
         <td><span v-if="!t.isEdit"><b>{{t.taskName}}</b></span>
             <span v-if="t.isEdit"><input type="text" v-model="eTask" v-on:keyup.enter="editTaskValue()" class="editInput"></span>
         </td>
         <td><b>{{t.dueDat}} {{t.dueType}}</b></td>
-        <td><button class="editButton" v-on:click="editTask(index)">Edit</button></td>
+        <td><span v-if="!t.isEdit"><button class="editButton" v-on:click="editTask(index)">Edit</button></span>
+            <span v-if="t.isEdit"><button class="editButton" v-on:click="editTaskValue()">Update</button></span>
+        </td>
         <td><button class="deleteButton" v-on:click="deleteTask(index)">Delete</button></td>
     </tr>
 </table>
@@ -51,6 +53,7 @@ export default {
             task: '',
             eTask: '', //EDITABLE TASK
             dueDate: '',
+            todayDate: '',
             diffBDate: 0,
             dueTimeType: '', //in hours, minutes or days
             msgForUser: '', //error message if user type to add with empty input field
@@ -70,7 +73,25 @@ export default {
         }
     },
     methods: {
+        minDate(){
+            //to disable all previous date from current date in date picker
+            var current = new Date().toISOString();
+            current = current.substring(0,current.length-1);
+            /*var fullYear = `${current.getFullYear()}`;
+            var month = `${current.getMonth()+1}`;
+            var day = `${current.getDate()}`;
+            if(month < 10){
+                month = '0'+month;
+            }
+            if(day < 10){
+                day = '0'+day;
+            }
+            var tdate = fullYear+'-'+month+'-'+day;
+            this.todayDate = tdate;*/
+            this.todayDate = current;
+        },
         editTaskValue() {
+            //edit a single task in line the table
             if (this.eTask.length > 0) {
                 this.msgForUser = ''
                 this.toDoList[this.editTaskIndex].taskName = this.eTask;
@@ -84,6 +105,7 @@ export default {
             }
         },
         addValue() {
+            //add new task to the list
             if (this.task.length > 0) {
                 if(this.dueDate != ''){
                     this.msgForUser = ''
@@ -97,7 +119,6 @@ export default {
                     });
                     this.task = '';
                     this.dueDate = '';
-                    console.log(this.toDoList);
                     this.updateList();
                 }else{
                     this.msgForUser = 'Please Choose a date, empty date can not be added'
@@ -116,12 +137,33 @@ export default {
             this.editTaskIndex = index;
             this.toDoList[index].isEdit = true;
         },
-        taskStatusModifier(index) {
-            if (this.toDoList[index].status == true) {
-                this.toDoList[index].status = false;
-            } else {
-                this.toDoList[index].status = true;
+        taskStatusModifier(task) {
+            var len = this.toDoList.length;
+            let i=0;
+            //let currentFilterName = '';
+            //currentFilterName = this.filter;
+            for(i=0; i<len; i++){
+                if(this.toDoList[i].taskName == task){
+                    console.log("found at position : "+i);
+                    if (this.toDoList[i].status == true) {
+                        this.toDoList[i].status = false;
+                    } 
+                    if (this.toDoList[i].status == false){
+                        this.toDoList[i].status = true;
+                    }
+                    this.allFilter();
+                    break;
+                }
             }
+            /*if(currentFilterName == 'all'){
+                this.allFilter();
+            }
+            if(currentFilterName == 'completed'){
+                this.completedFilter();
+            }
+            if(currentFilterName == 'notcompleted'){
+                this.notCompletedFilter();
+            }*/
         },
         updateList() {
             this.filteredList = [];
@@ -152,9 +194,7 @@ export default {
             }
         },
         dueDateDiff() {
-            const current = new Date();
-            var cdate = `${current.getFullYear()}-${current.getMonth()+1}-${current.getDate()}`;
-            cdate = new Date(cdate);
+            var cdate = new Date();
             var ddate = this.dueDate;
             ddate = new Date(ddate);
             //console.log(cdate+' '+ddate);
