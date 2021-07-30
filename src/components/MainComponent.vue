@@ -73,6 +73,36 @@ export default {
             isdue:false
         }
     },
+    watch:{
+        //runs if filter changes
+        filter(val){
+            if(val == 'all'){
+                this.isall = true;
+                this.iscompleted = false;
+                this.isnotcompleted = false;
+                this.isdue = false;
+            }
+            else if(val == 'completed'){
+                this.isall = false;
+                this.iscompleted = true;
+                this.isnotcompleted = false;
+                this.isdue = false;
+            }
+            else if(val == 'notcompleted'){
+                this.isall = false;
+                this.iscompleted = false;
+                this.isnotcompleted = true;
+                this.isdue = false;
+            }
+            else{
+                this.isall = false;
+                this.iscompleted = false;
+                this.isnotcompleted = false;
+                this.isdue = true;
+            }
+            this.updateList();
+        }
+    },
     methods: {
         minDate(){
             //to disable all previous date from current date in date picker
@@ -152,28 +182,7 @@ export default {
                 }
             });
             this.allFilter();
-            /*for(i=0; i<len; i++){
-                if(this.toDoList[i].taskId == id){
-                    console.log("found at position : "+i);
-                    if (this.toDoList[i].status == true) {
-                        this.toDoList[i].status = false;
-                    } 
-                    if (this.toDoList[i].status == false){
-                        this.toDoList[i].status = true;
-                    }
-                    this.updateList();
-                    break;
-                }
-            }
-            if(currentFilterName == 'all'){
-                this.allFilter();
-            }
-            if(currentFilterName == 'completed'){
-                this.completedFilter();
-            }
-            if(currentFilterName == 'notcompleted'){
-                this.notCompletedFilter();
-            }*/
+            
         },
         updateList() {
             this.filteredList = [];
@@ -186,14 +195,12 @@ export default {
             } else if (this.filter == 'completed') {
                 for (i = 0; i < len; i++) {
                     if (this.toDoList[i].status == true && this.toDoList[i].dueType != 'Expired') {
-                        console.log(this.toDoList[i], 'Completed', i);
                         this.filteredList.push(this.toDoList[i]);
                     }
                 }
             } else if (this.filter == 'notcompleted') {
                 for (i = 0; i < len; i++) {
                     if (this.toDoList[i].status == false && this.toDoList[i].dueType != 'Expired') {
-                         console.log(this.toDoList[i], 'notCompleted', i);
                         this.filteredList.push(this.toDoList[i]);
                     }
                 }
@@ -237,35 +244,15 @@ export default {
         },
         allFilter(){
             this.filter = 'all';
-            this.isall = true;
-            this.iscompleted = false;
-            this.isnotcompleted = false;
-            this.isdue = false;
-            this.updateList();
         },
         completedFilter(){
             this.filter = 'completed';
-            this.isall = false;
-            this.iscompleted = true;
-            this.isnotcompleted = false;
-            this.isdue = false;
-            this.updateList();
         },
         notCompletedFilter(){
             this.filter = 'notcompleted';
-            this.isall = false;
-            this.iscompleted = false;
-            this.isnotcompleted = true;
-            this.isdue = false;
-            this.updateList();
         },
         dueFilter(){
             this.filter = 'due';
-            this.isall = false;
-            this.iscompleted = false;
-            this.isnotcompleted = false;
-            this.isdue = true;
-            this.updateList();
         },
         // taskStatusModifier(index) {
         //     /* previous code
