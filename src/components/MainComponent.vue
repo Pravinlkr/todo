@@ -116,13 +116,6 @@ export default {
             this.editTaskIndex = index;
             this.toDoList[index].isEdit = true;
         },
-        taskStatusModifier(index) {
-            if (this.toDoList[index].status == true) {
-                this.toDoList[index].status = false;
-            } else {
-                this.toDoList[index].status = true;
-            }
-        },
         updateList() {
             this.filteredList = [];
             const len = this.toDoList.length;
@@ -213,6 +206,52 @@ export default {
             this.isnotcompleted = false;
             this.isdue = true;
             this.updateList();
+        },
+        taskStatusModifier(index) {
+            /* previous code
+            if(this.toDoList[index].status == true){
+                this.toDoList[index].status = false;
+            }
+            else{
+                this.toDoList[index].status = true;
+            }*/
+            console.log(this.filter);
+            if(this.filter == 'all'){
+                if(this.toDoList[index].status == true){
+                    this.toDoList[index].status = false;
+                }
+                else{
+                    this.toDoList[index].status = true;
+                }
+                console.log(this.toDoList[index].status);
+                this.allFilter();
+                
+            }
+            else if(this.filter == 'completed'){
+                //this.toDoList[index].status = false;
+                if(this.toDoList[index].status == true){
+                    this.toDoList[index].status = false;
+                }
+                else{
+                    this.toDoList[index].status = true;
+                }
+                console.log(this.toDoList[index].status);
+                this.completedFilter();
+            }
+            else if(this.filter == 'notcompleted'){
+                //this.toDoList[index].status = true;
+                if(this.toDoList[index].status == true){
+                    this.toDoList[index].status = false;
+                }
+                else{
+                    this.toDoList[index].status = true;
+                }
+                console.log(this.toDoList[index].status);
+                this.notCompletedFilter();
+            }
+            else if(this.filter == 'due'){
+                this.dueFilter();
+            }
         }
     },
     mounted() {
