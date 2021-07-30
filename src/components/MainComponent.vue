@@ -1,6 +1,6 @@
 <template>
 <input type="text" v-model="task" placeholder="Task...">
-<input type="date" v-model="dueDate" class="dueDate">
+<input type="datetime-local" v-model="dueDate" class="dueDate" v-on:click="minDate()" v-bind:min="todayDate">
 <button class="addButton" v-on:click="addValue()">Add</button>
 <br /><br />
 <p style="color:orange">{{msgForUser}}</p>
@@ -16,12 +16,14 @@
     </tr>
     <!--show all items in to do list-->
     <tr v-for="(t,index) in filteredList" v-bind:key="index">
-        <td><input type="checkbox" v-model="t.status" v-on:click="taskStatusModifier(index)"></td>
+        <td><input type="checkbox" v-model="t.status" v-on:click="taskStatusModifier(t.taskId)"></td>
         <td><span v-if="!t.isEdit"><b>{{t.taskName}}</b></span>
             <span v-if="t.isEdit"><input type="text" v-model="eTask" v-on:keyup.enter="editTaskValue()" class="editInput"></span>
         </td>
         <td><b>{{t.dueDat}} {{t.dueType}}</b></td>
-        <td><button class="editButton" v-on:click="editTask(index)">Edit</button></td>
+        <td><span v-if="!t.isEdit"><button class="editButton" v-on:click="editTask(t.taskId)">Edit</button></span>
+            <span v-if="t.isEdit"><button class="editButton" v-on:click="editTaskValue()">Update</button></span>
+        </td>
         <td><button class="deleteButton" v-on:click="deleteTask(index)">Delete</button></td>
     </tr>
 </table>
@@ -49,8 +51,10 @@ export default {
     data() {
         return {
             task: '',
+            taskId:0,
             eTask: '', //EDITABLE TASK
             dueDate: '',
+            todayDate: '',
             diffBDate: 0,
             dueTimeType: '', //in hours, minutes or days
             msgForUser: '', //error message if user type to add with empty input field
@@ -70,7 +74,14 @@ export default {
         }
     },
     methods: {
+        minDate(){
+            //to disable all previous date from current date in date picker
+            var current = new Date().toISOString();
+            current = current.substring(0,current.length-1);
+            this.todayDate = current;
+        },
         editTaskValue() {
+            //edit a single task in line the table
             if (this.eTask.length > 0) {
                 this.msgForUser = ''
                 this.toDoList[this.editTaskIndex].taskName = this.eTask;
@@ -84,11 +95,14 @@ export default {
             }
         },
         addValue() {
+            //add new task to the list
             if (this.task.length > 0) {
                 if(this.dueDate != ''){
+                    this.taskId = this.taskId + 2;
                     this.msgForUser = ''
                     this.dueDateDiff();
                     this.toDoList.push({
+                        taskId: this.taskId,
                         taskName: this.task,
                         dueDat: this.diffBDate,
                         dueType: this.dueTimeType,
@@ -97,7 +111,6 @@ export default {
                     });
                     this.task = '';
                     this.dueDate = '';
-                    console.log(this.toDoList);
                     this.updateList();
                 }else{
                     this.msgForUser = 'Please Choose a date, empty date can not be added'
@@ -111,10 +124,56 @@ export default {
             this.toDoList.splice(index, 1);
             this.updateList();
         },
-        editTask(index) {
-            this.eTask = this.toDoList[index].taskName;
-            this.editTaskIndex = index;
-            this.toDoList[index].isEdit = true;
+        editTask(id) {
+            var len = this.toDoList.length;
+            let i=0;
+            for(i=0; i<len; i++){
+                if(this.toDoList[i].taskId == id){
+                    this.eTask = this.toDoList[i].taskName;
+                    this.editTaskIndex = i;
+                    this.toDoList[i].isEdit = true;
+                }
+            }
+        },
+        taskStatusModifier(id) {
+            //var len = this.toDoList.length;
+            let i=0;
+            //let currentFilterName = '';
+            //currentFilterName = this.filter;
+            this.toDoList.forEach(element => {
+                if(element.taskId == id){
+                    console.log("found at position : "+i);
+                    if (element.status == true) {
+                        element.status = false;
+                    } 
+                    if (element.status == false){
+                        element.status = true;
+                    }
+                }
+            });
+            this.allFilter();
+            /*for(i=0; i<len; i++){
+                if(this.toDoList[i].taskId == id){
+                    console.log("found at position : "+i);
+                    if (this.toDoList[i].status == true) {
+                        this.toDoList[i].status = false;
+                    } 
+                    if (this.toDoList[i].status == false){
+                        this.toDoList[i].status = true;
+                    }
+                    this.updateList();
+                    break;
+                }
+            }
+            if(currentFilterName == 'all'){
+                this.allFilter();
+            }
+            if(currentFilterName == 'completed'){
+                this.completedFilter();
+            }
+            if(currentFilterName == 'notcompleted'){
+                this.notCompletedFilter();
+            }*/
         },
         updateList() {
             this.filteredList = [];
@@ -127,12 +186,14 @@ export default {
             } else if (this.filter == 'completed') {
                 for (i = 0; i < len; i++) {
                     if (this.toDoList[i].status == true && this.toDoList[i].dueType != 'Expired') {
+                        console.log(this.toDoList[i], 'Completed', i);
                         this.filteredList.push(this.toDoList[i]);
                     }
                 }
             } else if (this.filter == 'notcompleted') {
                 for (i = 0; i < len; i++) {
                     if (this.toDoList[i].status == false && this.toDoList[i].dueType != 'Expired') {
+                         console.log(this.toDoList[i], 'notCompleted', i);
                         this.filteredList.push(this.toDoList[i]);
                     }
                 }
@@ -143,11 +204,10 @@ export default {
                     }
                 }
             }
+            console.log(this.filteredList);
         },
         dueDateDiff() {
-            const current = new Date();
-            var cdate = `${current.getFullYear()}-${current.getMonth()+1}-${current.getDate()}`;
-            cdate = new Date(cdate);
+            var cdate = new Date();
             var ddate = this.dueDate;
             ddate = new Date(ddate);
             //console.log(cdate+' '+ddate);
@@ -207,52 +267,52 @@ export default {
             this.isdue = true;
             this.updateList();
         },
-        taskStatusModifier(index) {
-            /* previous code
-            if(this.toDoList[index].status == true){
-                this.toDoList[index].status = false;
-            }
-            else{
-                this.toDoList[index].status = true;
-            }*/
-            console.log(this.filter);
-            if(this.filter == 'all'){
-                if(this.toDoList[index].status == true){
-                    this.toDoList[index].status = false;
-                }
-                else{
-                    this.toDoList[index].status = true;
-                }
-                console.log(this.toDoList[index].status);
-                this.allFilter();
+        // taskStatusModifier(index) {
+        //     /* previous code
+        //     if(this.toDoList[index].status == true){
+        //         this.toDoList[index].status = false;
+        //     }
+        //     else{
+        //         this.toDoList[index].status = true;
+        //     }*/
+        //     console.log(this.filter);
+        //     if(this.filter == 'all'){
+        //         if(this.toDoList[index].status == true){
+        //             this.toDoList[index].status = false;
+        //         }
+        //         else{
+        //             this.toDoList[index].status = true;
+        //         }
+        //         console.log(this.toDoList[index].status);
+        //         this.allFilter();
                 
-            }
-            else if(this.filter == 'completed'){
-                //this.toDoList[index].status = false;
-                if(this.toDoList[index].status == true){
-                    this.toDoList[index].status = false;
-                }
-                else{
-                    this.toDoList[index].status = true;
-                }
-                console.log(this.toDoList[index].status);
-                this.completedFilter();
-            }
-            else if(this.filter == 'notcompleted'){
-                //this.toDoList[index].status = true;
-                if(this.toDoList[index].status == true){
-                    this.toDoList[index].status = false;
-                }
-                else{
-                    this.toDoList[index].status = true;
-                }
-                console.log(this.toDoList[index].status);
-                this.notCompletedFilter();
-            }
-            else if(this.filter == 'due'){
-                this.dueFilter();
-            }
-        }
+        //     }
+        //     else if(this.filter == 'completed'){
+        //         //this.toDoList[index].status = false;
+        //         if(this.toDoList[index].status == true){
+        //             this.toDoList[index].status = false;
+        //         }
+        //         else{
+        //             this.toDoList[index].status = true;
+        //         }
+        //         console.log(this.toDoList[index].status);
+        //         this.completedFilter();
+        //     }
+        //     else if(this.filter == 'notcompleted'){
+        //         //this.toDoList[index].status = true;
+        //         if(this.toDoList[index].status == true){
+        //             this.toDoList[index].status = false;
+        //         }
+        //         else{
+        //             this.toDoList[index].status = true;
+        //         }
+        //         console.log(this.toDoList[index].status);
+        //         this.notCompletedFilter();
+        //     }
+        //     else if(this.filter == 'due'){
+        //         this.dueFilter();
+        //     }
+        // }
     },
     mounted() {
         this.updateList();
