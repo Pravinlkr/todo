@@ -15,7 +15,7 @@
         <th>Delete</th>
     </tr>
     <!--show all items in to do list-->
-    <tr v-for="(t,index) in filteredList" v-bind:key="index">
+    <tr v-for="(t,index) in filteredList" v-bind:key="index" :class="{displayRow:t.showRow}">
         <td><input type="checkbox" v-model="t.status" v-on:click="taskStatusModifier(t.taskId)"></td>
         <td><span v-if="!t.isEdit"><b>{{t.taskName}}</b></span>
             <span v-if="t.isEdit"><input type="text" v-model="eTask" v-on:keyup.enter="editTaskValue()" class="editInput"></span>
@@ -61,11 +61,11 @@ export default {
             editTaskIndex: null,
             filter: 'all',
             allList: true,
-            /*toDoList data is like {taskName:'first task',dueDate:'2021-08-21',dueType status:true},
-                                    {taskName:'second task',dueDate:'2021-08-25',status:false},
-                                    {taskName:'third task',dueDate:'2021-08-12' ,status:true},
-                                    {taskName:'fourth task',dueDate:'2021-08-01' ,status:false}*/
-            toDoList: [],
+            toDoList: [{"showRow":false,"taskId":2,"taskName":"one","dueDat":7,"dueType":"Days","isEdit":false,"status":false},
+                       {"showRow":false,"taskId":4,"taskName":"two","dueDat":2,"dueType":"Days","isEdit":false,"status":false},
+                       {"showRow":false,"taskId":6,"taskName":"three","dueDat":7,"dueType":"Days","isEdit":false,"status":false},
+                       {"showRow":false,"taskId":8,"taskName":"four","dueDat":17,"dueType":"Days","isEdit":false,"status":false},
+                       {"showRow":false,"taskId":10,"taskName":"five","dueDat":27,"dueType":"Days","isEdit":false,"status":false}],
             filteredList: [],
             isall:true,
             iscompleted:false,
@@ -87,6 +87,7 @@ export default {
                 this.iscompleted = true;
                 this.isnotcompleted = false;
                 this.isdue = false;
+                
             }
             else if(val == 'notcompleted'){
                 this.isall = false;
@@ -100,7 +101,42 @@ export default {
                 this.isnotcompleted = false;
                 this.isdue = true;
             }
-            this.updateList();
+        }
+    },
+    computed:{
+        //update filteredlist every time it is called
+        updateSection(){
+            this.toDoList.forEach(element => {
+                element.showRow = false;
+            });
+            if(this.filter == 'all'){
+                this.toDoList.forEach(element => {
+                    element.showRow = false;
+                    this.filteredList.push(element);
+            });
+            }
+            if(this.filter == 'completed'){
+                this.toDoList.forEach(element => {
+                if(element.status == true && element.dueType != 'Expired'){
+                    this.filteredList.push(element);
+                }
+            });
+            }
+            if(this.filter == 'notcompleted'){
+                this.toDoList.forEach(element => {
+                if(element.status == false && element.dueType != 'Expired'){
+                    this.filteredList.push(element);
+                }
+            });
+            }
+            if(this.filter == 'due'){
+                this.toDoList.forEach(element => {
+                if(element.dueType == 'Expired'){
+                    this.filteredList.push(element);
+                }
+            });
+            }
+            return this.filteredList;
         }
     },
     methods: {
@@ -118,7 +154,8 @@ export default {
                 this.eTask = '';
                 this.toDoList[this.editTaskIndex].isEdit = false;
                 this.editTaskIndex = null;
-                this.updateList();
+                this.filteredList = [];
+                this.updateSection;
 
             } else {
                 this.msgForUser = 'Can not add empty field to task, please type something'
@@ -136,12 +173,14 @@ export default {
                         taskName: this.task,
                         dueDat: this.diffBDate,
                         dueType: this.dueTimeType,
+                        showRow: false,
                         isEdit:false,
                         status: false
                     });
                     this.task = '';
                     this.dueDate = '';
-                    this.updateList();
+                    this.filteredList = [];
+                    this.updateSection;
                 }else{
                     this.msgForUser = 'Please Choose a date, empty date can not be added'
                 }
@@ -152,7 +191,8 @@ export default {
         },
         deleteTask(index) {
             this.toDoList.splice(index, 1);
-            this.updateList();
+            this.filteredList = [];
+            this.updateSection;
         },
         editTask(id) {
             var len = this.toDoList.length;
@@ -166,52 +206,22 @@ export default {
             }
         },
         taskStatusModifier(id) {
-            //var len = this.toDoList.length;
-            let i=0;
-            //let currentFilterName = '';
-            //currentFilterName = this.filter;
-            this.toDoList.forEach(element => {
-                if(element.taskId == id){
-                    console.log("found at position : "+i);
+             this.toDoList.forEach(element => {
+                if(element.taskId === id){
                     if (element.status == true) {
                         element.status = false;
+                        if(this.filter == 'completed' || this.filter == 'notcompleted'){
+                            element.showRow = true;
+                        }   
                     } 
                     if (element.status == false){
                         element.status = true;
-                    }
+                        if(this.filter == 'completed' || this.filter == 'notcompleted'){
+                            element.showRow = true;
+                        } 
+                    }    
                 }
             });
-            this.allFilter();
-            
-        },
-        updateList() {
-            this.filteredList = [];
-            const len = this.toDoList.length;
-            var i = 0;
-            if (this.filter == 'all') {
-                for (i = 0; i < len; i++) {
-                    this.filteredList.push(this.toDoList[i]);
-                }
-            } else if (this.filter == 'completed') {
-                for (i = 0; i < len; i++) {
-                    if (this.toDoList[i].status == true && this.toDoList[i].dueType != 'Expired') {
-                        this.filteredList.push(this.toDoList[i]);
-                    }
-                }
-            } else if (this.filter == 'notcompleted') {
-                for (i = 0; i < len; i++) {
-                    if (this.toDoList[i].status == false && this.toDoList[i].dueType != 'Expired') {
-                        this.filteredList.push(this.toDoList[i]);
-                    }
-                }
-            } else if(this.filter == 'due'){
-                for(i=0; i<len; i++){
-                    if(this.toDoList[i].dueType == 'Expired'){
-                        this.filteredList.push(this.toDoList[i]);
-                    }
-                }
-            }
-            console.log(this.filteredList);
         },
         dueDateDiff() {
             var cdate = new Date();
@@ -244,65 +254,27 @@ export default {
         },
         allFilter(){
             this.filter = 'all';
+            this.filteredList = [];
+            this.updateSection;
         },
         completedFilter(){
             this.filter = 'completed';
+            this.filteredList = [];
+            this.updateSection;
         },
         notCompletedFilter(){
             this.filter = 'notcompleted';
+            this.filteredList = [];
+            this.updateSection;
         },
         dueFilter(){
             this.filter = 'due';
-        },
-        // taskStatusModifier(index) {
-        //     /* previous code
-        //     if(this.toDoList[index].status == true){
-        //         this.toDoList[index].status = false;
-        //     }
-        //     else{
-        //         this.toDoList[index].status = true;
-        //     }*/
-        //     console.log(this.filter);
-        //     if(this.filter == 'all'){
-        //         if(this.toDoList[index].status == true){
-        //             this.toDoList[index].status = false;
-        //         }
-        //         else{
-        //             this.toDoList[index].status = true;
-        //         }
-        //         console.log(this.toDoList[index].status);
-        //         this.allFilter();
-                
-        //     }
-        //     else if(this.filter == 'completed'){
-        //         //this.toDoList[index].status = false;
-        //         if(this.toDoList[index].status == true){
-        //             this.toDoList[index].status = false;
-        //         }
-        //         else{
-        //             this.toDoList[index].status = true;
-        //         }
-        //         console.log(this.toDoList[index].status);
-        //         this.completedFilter();
-        //     }
-        //     else if(this.filter == 'notcompleted'){
-        //         //this.toDoList[index].status = true;
-        //         if(this.toDoList[index].status == true){
-        //             this.toDoList[index].status = false;
-        //         }
-        //         else{
-        //             this.toDoList[index].status = true;
-        //         }
-        //         console.log(this.toDoList[index].status);
-        //         this.notCompletedFilter();
-        //     }
-        //     else if(this.filter == 'due'){
-        //         this.dueFilter();
-        //     }
-        // }
+            this.filteredList = [];
+            this.updateSection;
+        }
     },
     mounted() {
-        this.updateList();
+        this.updateSection;
     }
 }
 </script>
@@ -336,7 +308,9 @@ table {
     margin: 2% auto;
     margin-bottom: 7%;
 }
-
+.displayRow{
+    display:none;
+}
 .editInput {
     width: 70%;
 }
